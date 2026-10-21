@@ -27,7 +27,7 @@ router.post("/api/auth/login", authLimiter, async (req, res) => {
 
     const key = identifier.toLowerCase();
     const [rows] = await db.query(
-      'SELECT * FROM users WHERE (role = "user" AND nim = ?) OR (role IN ("petugas","admin") AND LOWER(username) = ?)',
+      `SELECT * FROM users WHERE (role = 'user' AND nim = ?) OR (role IN ('petugas','admin') AND LOWER(username) = ?)`,
       [identifier, key],
     );
     if (rows.length === 0)
@@ -118,7 +118,7 @@ router.post("/api/auth/register", authLimiter, (req, res) => {
       const ktmBase64 = fileToBase64(req.file);
 
       const [result] = await db.query(
-        'INSERT INTO users (name, nim, prodi, password_hash, role, verification_status, ktm_photo) VALUES (?, ?, ?, ?, "user", "PENDING", ?)',
+        `INSERT INTO users (name, nim, prodi, password_hash, role, verification_status, ktm_photo) VALUES (?, ?, ?, ?, 'user', 'PENDING', ?)`,
         [name, nim, prodi, hash, ktmBase64],
       );
       await audit(
@@ -165,7 +165,7 @@ router.get(
   async (req, res) => {
     try {
       const [rows] = await db.query(
-        'SELECT id, name, nim, prodi, ktm_photo, verification_status, created_at FROM users WHERE role = "user" AND verification_status = "PENDING" ORDER BY created_at ASC',
+        `SELECT id, name, nim, prodi, ktm_photo, verification_status, created_at FROM users WHERE role = 'user' AND verification_status = 'PENDING' ORDER BY created_at ASC`,
       );
       res.json({ success: true, data: rows });
     } catch (err) {
@@ -187,7 +187,7 @@ router.post(
       }
       const status = approve === false ? "REJECTED" : "ACTIVE";
       await db.query(
-        'UPDATE users SET verification_status = ?, rejected_reason = ?, verified_by_id = ?, verified_at = ? WHERE id = ? AND role = "user"',
+        `UPDATE users SET verification_status = ?, rejected_reason = ?, verified_by_id = ?, verified_at = ? WHERE id = ? AND role = 'user'`,
         [
           status,
           approve === false ? String(reason).trim() : null,
