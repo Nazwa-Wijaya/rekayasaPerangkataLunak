@@ -1,0 +1,95 @@
+/* css/base.css — Token tema + reset + base (neo-brutalism ala kartu barang). */
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* Font Families dari Google Fonts */
+  --font-body: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-heading: "Archivo Black", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --bg: #f1f1ef;
+  --panel: #fff;
+  --ink: #0f1110;
+  --mute: #585d59;
+  --line: #0f1110;
+  --pri: #0f1110;
+  --pri2: #2a2e2c;
+  --pri-ink: #fff;
+  --soft: #eaf9cf;
+  --ph: #fff;
+  --side: #0f1110;
+  --side-ink: #e8e9e5;
+  --err: #9b2c1f;
+  --pending: #8a5a00;
+  --pending-bg: #ffe58a;
+  --active: #2a45a8;
+  --active-bg: #dfe8ff;
+  --found: #2a45a8;
+  --found-bg: #dfe8ff;
+  --ret: #3b6a0a;
+  --ret-bg: #bff0d4;
+  --rej: #9b2c1f;
+  --rej-bg: #ffd5cd;
+  --exp: #555;
+  --exp-bg: #e8e8e2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light;
+    --bg: #f1f1ef;
+    --panel: #fff;
+    --ink: #0f1110;
+    --mute: #585d59;
+    --line: #0f1110;
+    --pri: #0f1110;
+    --pri2: #2a2e2c;
+    --pri-ink: #fff;
+    --soft: #eaf9cf;
+    --ph: #fff;
+    --side: #0f1110;
+    --side-ink: #e8e9e5;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(rgba(15, 17, 16, .09) 1.2px, transparent 1.5px);
+  background-size: 18px 18px;
+  background-attachment: fixed;
+  color: var(--ink);
+  font: 14px/1.6 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+svg.i {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}

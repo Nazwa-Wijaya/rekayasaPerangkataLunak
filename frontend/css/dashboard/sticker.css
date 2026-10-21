@@ -1,0 +1,104 @@
+/* css/dashboard/sticker.css — Varian kartu sticker. */
+/* ==========================================================
+   KARTU LAPORAN — gaya "sticker" playful (border tebal, bayangan keras,
+   warna pastel per jenis laporan). HANYA tampilan; markup & fungsi tidak berubah.
+   Hilang  -> kuning     Temuan -> mint
+   Dikembalikan -> lavender   Kedaluwarsa -> abu   Ditolak -> merah muda
+   ========================================================== */
+
+.fv .fv-cards { grid-template-columns: repeat(auto-fill, minmax(236px, 1fr)); gap: 24px 22px; padding: 0 6px 6px 0; }
+
+.fv .fv-item {
+  --c-bg: #ffe58a;                 /* default = laporan hilang */
+  --c-edge: var(--fv-ink);
+  position: relative;
+  background: var(--c-bg);
+  border: 2px solid var(--c-edge);
+  border-radius: 26px;
+  padding: 12px 12px 14px;
+  box-shadow: 5px 5px 0 var(--c-edge);
+  transition: transform .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s cubic-bezier(.2, .8, .2, 1);
+}
+.fv .fv-item:has(.fv-type.found)        { --c-bg: #bff0d4; }
+.fv .fv-item:has(.fv-chip.st-returned)  { --c-bg: #e1d9ff; }
+.fv .fv-item:has(.fv-chip.st-expired)   { --c-bg: #e8e8e2; }
+.fv .fv-item:has(.fv-chip.st-rejected)  { --c-bg: #ffd5cd; }
+
+.fv .fv-item:hover { transform: translate(-3px, -3px); box-shadow: 8px 8px 0 var(--c-edge); }
+.fv .fv-item:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--c-edge); }
+.fv .fv-item:focus-visible { outline: 3px solid var(--fv-lime); outline-offset: 3px; }
+
+/* ---------- Foto ---------- */
+.fv .fv-photo {
+  border: 2px solid var(--c-edge);
+  border-radius: 18px;
+  aspect-ratio: 4 / 3;
+  background: radial-gradient(rgba(15, 17, 16, .16) 1.3px, transparent 1.6px) 0 0 / 14px 14px, #fff;
+}
+.fv .fv-ph-ico .fv-i { width: 44px; height: 44px; color: var(--fv-ink); stroke-width: 1.6; }
+
+/* Label status (kiri atas) — seperti stiker */
+.fv .fv-photo .fv-chip {
+  top: 9px; left: 9px;
+  border: 2px solid var(--fv-ink);
+  box-shadow: 2px 2px 0 var(--fv-ink);
+  font-family: var(--font-mono);
+  font-weight: 700; font-size: 10.5px; padding: 3px 10px;
+  max-width: calc(100% - 96px);
+  transform: rotate(-2deg);
+}
+.fv .fv-photo .fv-chip.st-returned { background: var(--fv-ink); color: #fff; }
+
+/* Label jenis HILANG / TEMUAN (kanan atas) */
+.fv .fv-type {
+  top: 9px; right: 9px;
+  border: 2px solid var(--fv-ink);
+  box-shadow: 2px 2px 0 var(--fv-ink);
+  font-family: var(--font-mono);
+  font-weight: 700; letter-spacing: .07em;
+  transform: rotate(3deg);
+}
+.fv .fv-type.lost  { background: #ff6f5b; color: #fff; text-shadow: 0 1px 0 rgba(15, 17, 16, .35); }
+.fv .fv-type.found { background: var(--fv-lime); color: var(--fv-ink); }
+
+/* ---------- Isi ---------- */
+.fv .fv-item-body { padding: 14px 4px 0; gap: 8px; }
+.fv .fv-item-body h3 {
+  font-family: var(--font-heading);
+  font-size: 17px; font-weight: 400; line-height: 1.2; letter-spacing: -0.02em;
+  color: var(--fv-ink) !important;
+  overflow-wrap: anywhere;
+}
+.fv .fv-cat {
+  background: #fff; border: 1.5px solid var(--fv-ink); border-radius: 999px;
+  padding: 3px 11px 3px 8px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--fv-ink);
+}
+.fv .fv-meta { color: #2b312e; font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; }
+.fv .fv-meta .fv-i { color: var(--fv-ink); }
+
+/* ---------- Footer berbentuk tombol pil ---------- */
+.fv .fv-item-foot {
+  margin-top: auto; padding: 5px 5px 5px 14px;
+  background: #fff; border: 2px solid var(--fv-ink); border-radius: 999px;
+  box-shadow: 2px 2px 0 var(--fv-ink);
+  gap: 10px;
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+.fv .fv-item:hover .fv-item-foot { box-shadow: 3px 3px 0 var(--fv-ink); }
+.fv .fv-item-foot small { color: var(--fv-ink); font-family: var(--font-mono); font-weight: 700; font-size: 11px; min-width: 0; }
+.fv .fv-go { width: 30px; height: 30px; border: 2px solid var(--fv-ink); background: var(--fv-ink); color: var(--fv-lime); }
+.fv .fv-item:hover .fv-go { background: var(--fv-lime); color: var(--fv-ink); transform: rotate(45deg); }
+
+/* ---------- Layar kecil ---------- */
+@media (max-width: 640px) {
+  .fv .fv-cards { grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 18px 14px; }
+  .fv .fv-item { border-radius: 22px; padding: 10px 10px 12px; box-shadow: 4px 4px 0 var(--c-edge); }
+  .fv .fv-item:hover { box-shadow: 6px 6px 0 var(--c-edge); }
+  .fv .fv-item-body h3 { font-size: 16px; }
+}
+@media (max-width: 420px) {
+  .fv .fv-cards { grid-template-columns: 1fr; padding-right: 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fv .fv-item, .fv .fv-item-foot { transition: none !important; }
+}

@@ -2,10 +2,13 @@
 -- DATABASE: lost_and_found_kampus
 -- Sistem Informasi Lost & Found Terintegrasi Kampus
 -- Kompatibel dengan MySQL / MariaDB (Laragon / phpMyAdmin / HeidiSQL)
+-- PRD §5: satu-satunya sumber struktur (file database.sql di root sudah dihapus).
+-- Password WAJIB bcrypt hash di `password_hash`. Tidak ada plaintext.
+-- Regist mahasiswa: verification_status PENDING -> ACTIVE/REJECTED (Cara B: KTM + ACC admin).
 -- ==========================================================
 
-CREATE DATABASE IF NOT EXISTS `lost_and_found_kampus` 
-CHARACTER SET utf8mb4 
+CREATE DATABASE IF NOT EXISTS `lost_and_found_kampus`
+CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
 USE `lost_and_found_kampus`;
@@ -13,6 +16,7 @@ USE `lost_and_found_kampus`;
 -- Matikan foreign key check saat migrasi struktur awal
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `audit_logs`;
 DROP TABLE IF EXISTS `messages`;
 DROP TABLE IF EXISTS `returns`;
 DROP TABLE IF EXISTS `matches`;
@@ -25,25 +29,32 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- ==========================================================
 -- 1. TABEL USERS (Mahasiswa, Petugas, Admin)
--- Sesuai README Section 8.1 & 11
+-- PRD §4 + §5: password_hash (bcrypt), status verifikasi regist KTM
+-- Daftar prodi valid ada di PRD §3 (ditegakkan di backend).
 -- ==========================================================
 CREATE TABLE `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `name` VARCHAR(100) NOT NULL COMMENT 'Nama lengkap pengguna',
-  `nim` VARCHAR(30) NULL UNIQUE COMMENT 'Nomor Induk Mahasiswa (khusus role user)',
-  `prodi` VARCHAR(100) NULL COMMENT 'Program studi / divisi petugas',
+  `nim` VARCHAR(30) NULL UNIQUE COMMENT 'Nomor Induk Mahasiswa (khusus role user, angka 5-15 digit)',
+  `prodi` VARCHAR(100) NULL COMMENT 'Program studi (role user, dari daftar PRD §3) / divisi petugas',
   `username` VARCHAR(50) NULL UNIQUE COMMENT 'Username untuk login staf (petugas/admin)',
-  `password` VARCHAR(255) NOT NULL COMMENT 'Password (disimpan dalam bentuk hash)',
+  `password_hash` VARCHAR(255) NOT NULL COMMENT 'Hash bcrypt password. JANGAN simpan plaintext.',
   `role` ENUM('user', 'petugas', 'admin') NOT NULL DEFAULT 'user' COMMENT 'Hak akses akun',
+  `verification_status` ENUM('PENDING', 'ACTIVE', 'REJECTED') NOT NULL DEFAULT 'ACTIVE' COMMENT 'Status verifikasi regist KTM (Cara B). Staf selalu ACTIVE.',
+  `ktm_photo` MEDIUMTEXT NULL COMMENT 'Foto KTM base64 data URL (hanya role user, disimpan langsung di database)',
+  `rejected_reason` TEXT NULL COMMENT 'Alasan penolakan verifikasi regist oleh admin',
+  `verified_by_id` INT NULL COMMENT 'ID admin yang ACC / menolak regist',
+  `verified_at` DATETIME NULL COMMENT 'Waktu verifikasi regist oleh admin',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT `fk_users_verifier` FOREIGN KEY (`verified_by_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   INDEX `idx_role` (`role`),
-  INDEX `idx_nim` (`nim`)
+  INDEX `idx_nim` (`nim`),
+  INDEX `idx_verification` (`verification_status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ==========================================================
 -- 2. TABEL CATEGORIES (Kategori Barang)
--- Sesuai README Section 11 & CATS di frontend
 -- ==========================================================
 CREATE TABLE `categories` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -53,8 +64,8 @@ CREATE TABLE `categories` (
 
 -- ==========================================================
 -- 3. TABEL LOST_REPORTS (Laporan Barang Hilang oleh Mahasiswa)
--- Sesuai README Section 8.2 & 11
 -- Aturan: Aktif maksimal 3 hari setelah disetujui (ACTIVE)
+-- Label admin: "Laporan Barang Hilang Masuk"
 -- ==========================================================
 CREATE TABLE `lost_reports` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -68,7 +79,7 @@ CREATE TABLE `lost_reports` (
   `classroom_number` VARCHAR(10) NULL COMMENT 'Nomor ruang kelas jika di kelas',
   `lost_date` DATE NOT NULL COMMENT 'Perkiraan tanggal kehilangan',
   `description` TEXT NOT NULL COMMENT 'Ciri-ciri khusus rahasia / deskripsi barang',
-  `photo` VARCHAR(255) NULL COMMENT 'Path file foto atau URL gambar',
+  `photo` MEDIUMTEXT NULL COMMENT 'Foto barang (base64 atau path/URL)',
   `status` ENUM('PENDING', 'ACTIVE', 'FOUND', 'RETURNED', 'REJECTED', 'EXPIRED') NOT NULL DEFAULT 'PENDING' COMMENT 'Status laporan kehilangan',
   `approved_at` DATETIME NULL COMMENT 'Waktu disetujui Admin (ACC)',
   `expired_at` DATETIME NULL COMMENT 'Masa aktif berakhir (approved_at + 3 hari)',
@@ -82,8 +93,8 @@ CREATE TABLE `lost_reports` (
 
 -- ==========================================================
 -- 4. TABEL FOUND_ITEMS (Barang Temuan Diterima Petugas / Admin)
--- Sesuai README Section 8.4 & 11
 -- Aturan: Mahasiswa tidak bisa upload langsung, diserahkan ke Petugas/Admin
+-- Label admin: "Laporan Barang Ditemukan Masuk"
 -- ==========================================================
 CREATE TABLE `found_items` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -96,7 +107,7 @@ CREATE TABLE `found_items` (
   `classroom_number` VARCHAR(10) NULL COMMENT 'Nomor ruang kelas jika ditemukan di kelas',
   `found_date` DATE NOT NULL COMMENT 'Tanggal ditemukan',
   `description` TEXT NULL COMMENT 'Kondisi barang dan catatan saat diterima',
-  `photo` VARCHAR(255) NULL COMMENT 'Foto barang temuan',
+  `photo` MEDIUMTEXT NULL COMMENT 'Foto barang temuan (base64 / path / URL)',
   `status` ENUM('PENDING_APPROVAL', 'APPROVED', 'MATCHED', 'RETURNED', 'REJECTED') NOT NULL DEFAULT 'PENDING_APPROVAL' COMMENT 'Status barang temuan',
   `received_by_id` INT NOT NULL COMMENT 'Petugas atau Admin yang mencatat penerimaan barang',
   `received_by_name` VARCHAR(100) NOT NULL COMMENT 'Nama pencatat (misal: Petugas - Budi Santoso)',
@@ -112,7 +123,6 @@ CREATE TABLE `found_items` (
 
 -- ==========================================================
 -- 5. TABEL MATCHES (Pencocokan Antara Laporan Hilang & Barang Temuan)
--- Sesuai README Section 8.6 & 11
 -- ==========================================================
 CREATE TABLE `matches` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -130,7 +140,6 @@ CREATE TABLE `matches` (
 
 -- ==========================================================
 -- 6. TABEL RETURNS (Riwayat Verifikasi & Pengembalian Barang)
--- Sesuai README Section 8.7 & 11 (5 Poin Verifikasi Kepemilikan)
 -- ==========================================================
 CREATE TABLE `returns` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -160,7 +169,6 @@ CREATE TABLE `returns` (
 
 -- ==========================================================
 -- 7. TABEL MESSAGES (Fitur Chat Antara Mahasiswa & Admin)
--- Sesuai implementasi pada UI frontend (chatAbout & sendM)
 -- ==========================================================
 CREATE TABLE `messages` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -177,9 +185,28 @@ CREATE TABLE `messages` (
   INDEX `idx_msg_thread` (`user_id`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ==========================================================
+-- 8. TABEL AUDIT_LOGS (PRD §5: catat ACC regist, ACC laporan, match, return)
+-- ==========================================================
+CREATE TABLE `audit_logs` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `actor_id` INT NULL COMMENT 'ID akun pelaku aksi (NULL = sistem)',
+  `action` VARCHAR(100) NOT NULL COMMENT 'Contoh: regist.pending, regist.approve, regist.reject, report.approve, found.approve, match.create, return.create',
+  `target_type` VARCHAR(50) NULL COMMENT 'users | lost_reports | found_items | matches | returns',
+  `target_id` INT NULL COMMENT 'ID baris target',
+  `detail` TEXT NULL COMMENT 'Catatan tambahan (alasan tolak, dsb)',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT `fk_audit_actor` FOREIGN KEY (`actor_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  INDEX `idx_audit_action` (`action`),
+  INDEX `idx_audit_target` (`target_type`, `target_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- ==========================================================
--- DATA SEEDER AWAL (Sesuai Demo State di script.js)
+-- DATA SEEDER AWAL
+-- Password demo di-hash bcrypt (cost 10):
+--   mahasiswa123, petugas123, admin123
+-- Prodi user memakai daftar PRD §3.
 -- ==========================================================
 
 -- 1. Insert Kategori
@@ -192,13 +219,14 @@ INSERT INTO `categories` (`id`, `name`) VALUES
 (6, 'Alat tulis dan buku'),
 (7, 'Lainnya');
 
--- 2. Insert Pengguna (Password demo: 12345 untuk user, petugas123, admin123)
-INSERT INTO `users` (`id`, `name`, `nim`, `prodi`, `username`, `password`, `role`) VALUES
-(1, 'Rina Marlina', '2211001', 'Teknik Informatika', NULL, '12345', 'user'),
-(2, 'Dimas Prakoso', '2211014', 'Teknik Sipil', NULL, '12345', 'user'),
-(3, 'Sari Lubis', '2311020', 'Manajemen', NULL, '12345', 'user'),
-(4, 'Budi Santoso', NULL, 'Keamanan & Logistik', 'petugas', 'petugas123', 'petugas'),
-(5, 'Petugas Kemahasiswaan', NULL, 'Pusat Kemahasiswaan', 'admin', 'admin123', 'admin');
+-- 2. Insert Pengguna (kolom password_hash, bukan password plaintext)
+INSERT INTO `users` (`id`, `name`, `nim`, `prodi`, `username`, `password_hash`, `role`, `verification_status`) VALUES
+(1, 'Rina Marlina', '2211001', 'S-1 Teknik Informatika', NULL, '$2b$10$wX9chlA.s2ZDv40s.MS9jeNXck6ko1yRxId8N7RqxwoEP.XXZ9KVe', 'user', 'ACTIVE'),
+(2, 'Dimas Prakoso', '2211014', 'S-1 Teknik Industri', NULL, '$2b$10$wX9chlA.s2ZDv40s.MS9jeNXck6ko1yRxId8N7RqxwoEP.XXZ9KVe', 'user', 'ACTIVE'),
+(3, 'Sari Lubis', '2311020', 'S-1 Manajemen', NULL, '$2b$10$wX9chlA.s2ZDv40s.MS9jeNXck6ko1yRxId8N7RqxwoEP.XXZ9KVe', 'user', 'ACTIVE'),
+(4, 'Budi Santoso', NULL, 'Keamanan & Logistik', 'petugas', '$2b$10$yqVmSBakKgmxGmpoy6.Hm.NARyOlT7WlJk56NJMyGlXpDiVcO8X7C', 'petugas', 'ACTIVE'),
+(5, 'Petugas Kemahasiswaan', NULL, 'Pusat Kemahasiswaan', 'admin', '$2b$10$tGsbKAQWPuIN3BTGrmyuPuvlpuzSCC69xhZ64PXWM/7K7mIzVd0C6', 'admin', 'ACTIVE'),
+(6, 'Dewi Anggraini', '2412001', 'S-1 Sistem Informasi', NULL, '$2b$10$wX9chlA.s2ZDv40s.MS9jeNXck6ko1yRxId8N7RqxwoEP.XXZ9KVe', 'user', 'PENDING');
 
 -- 3. Insert Laporan Kehilangan
 INSERT INTO `lost_reports` (`id`, `user_id`, `category_id`, `item_name`, `color`, `brand`, `building`, `lost_location`, `classroom_number`, `lost_date`, `description`, `photo`, `status`, `approved_at`, `expired_at`, `created_at`) VALUES

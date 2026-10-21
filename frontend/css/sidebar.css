@@ -1,0 +1,169 @@
+/* css/sidebar.css — Sidebar responsif (neo-brutalism ala kartu barang). */
+/* Layar besar & sedang (>= 761px): sidebar ikon saja.
+   Layar kecil (<= 760px): hamburger + drawer dari kiri. */
+
+.app > aside .nav { position: relative; }
+.app > aside .nav-ic { display: grid; place-items: center; flex: none; }
+.app > aside .nav-ic svg.i { width: 20px; height: 20px; }
+.app > aside .nav-txt { flex: 1; min-width: 0; text-align: left; }
+.app > aside .nav:focus-visible,
+.app > aside .me-out:focus-visible,
+.app > aside .me-info:focus-visible,
+.app > aside .logo:focus-visible { outline: 3px solid var(--lime); outline-offset: 2px; }
+
+.app > aside .me { display: block; }
+.app > aside .me-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.app > aside .me-av {
+  width: 40px; height: 40px; border-radius: 12px; flex: none;
+  display: grid; place-items: center;
+  background: var(--lime); color: var(--ink); font-family: var(--font-heading); font-weight: 400; font-size: 15px;
+  border: 2px solid #fff;
+  box-shadow: 2px 2px 0 rgba(255,255,255,.9);
+}
+.app > aside .me-txt { display: flex; flex-direction: column; min-width: 0; font-size: 13px; line-height: 1.4; }
+.app > aside .me-txt b { color: #fff; font-weight: 800; overflow-wrap: anywhere; }
+.app > aside .me-role { color: #e8e9e5; overflow-wrap: anywhere; font-family: var(--font-mono); font-size: 11.5px; }
+.app > aside .me-out {
+  margin-top: 12px; display: inline-flex; align-items: center; gap: 8px;
+  background: #fff; border: 2px solid #fff; color: var(--ink); cursor: pointer;
+  padding: 9px 14px; border-radius: 12px; font-family: var(--font-mono); font-size: 12.5px; font-weight: 700;
+  box-shadow: 3px 3px 0 rgba(255,255,255,.35);
+  transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s;
+}
+.app > aside .me-out:hover { background: var(--lime); border-color: var(--lime); transform: translate(-1px,-1px); box-shadow: 4px 4px 0 rgba(255,255,255,.5); }
+.app > aside .me-out svg.i { width: 18px; height: 18px; }
+
+.app > .m-bar,
+.app > .side-overlay,
+.app > aside .side-close { display: none; }
+
+.side-tip {
+  position: fixed; z-index: 3000;
+  transform: translate(-6px, -50%);
+  background: var(--ink); color: #fff;
+  font: 700 12px/1.2 var(--font-mono);
+  padding: 8px 12px; border-radius: 10px;
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 rgba(15, 17, 16, .35);
+  white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity .15s ease, transform .15s ease;
+}
+.side-tip.on { opacity: 1; transform: translate(0, -50%); }
+.side-tip::before {
+  content: ""; position: absolute; left: -5px; top: 50%;
+  width: 8px; height: 8px; background: var(--ink);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+@media (min-width: 761px) {
+  .app { grid-template-columns: 76px minmax(0, 1fr); }
+  .app > aside {
+    width: 76px; padding: 16px 0 14px; align-items: center; gap: 4px;
+    overflow-x: hidden; overflow-y: auto; scrollbar-width: none;
+  }
+  .app > aside::-webkit-scrollbar { display: none; }
+
+  .app > aside .logo { padding: 0 0 14px; justify-content: center; gap: 0; width: 100%; }
+  .app > aside .logo img { width: 42px; height: 42px; }
+  .app > aside .logo-txt { display: none; }
+
+  .app > aside .grp {
+    font-size: 0; height: 0; padding: 0; margin: 8px 0; overflow: hidden;
+    width: 28px; align-self: center; border-top: 2px solid rgba(255,255,255,.25);
+  }
+  .app > aside .logo + .grp { display: none; }
+
+  .app > aside .nav {
+    width: 48px; height: 48px; padding: 0; gap: 0;
+    justify-content: center; border-radius: 13px;
+    transform: none;
+  }
+  .app > aside .nav:hover { transform: none; }
+  .app > aside .nav .nav-ic svg.i { width: 22px; height: 22px; transition: transform .2s ease; }
+  .app > aside .nav:hover .nav-ic svg.i { transform: scale(1.12); }
+  .app > aside .nav-txt { display: none; }
+
+  .app > aside .nav .cnt {
+    position: absolute; top: 2px; right: 0;
+    min-width: 19px; height: 19px; padding: 0 5px;
+    display: grid; place-items: center;
+    font-size: 10.5px; line-height: 1; font-weight: 800;
+    box-shadow: 0 0 0 2px #0f1110;
+  }
+
+  .app > aside .me {
+    width: 100%; margin-top: auto; padding: 14px 0 0;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .app > aside .me-txt, .app > aside .me-out-txt { display: none; }
+  .app > aside .me-info { gap: 0; justify-content: center; cursor: default; }
+  .app > aside .me-out { margin-top: 0; width: 46px; height: 46px; padding: 0; justify-content: center; gap: 0; border-radius: 13px; }
+  .app > aside .me-out svg.i { width: 21px; height: 21px; }
+}
+
+@media (max-width: 760px) {
+  .side-tip { display: none !important; }
+  .app { grid-template-columns: 1fr; }
+
+  .app > .m-bar {
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 30;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 10px;
+    background: var(--ink); color: #fff; border-bottom: 3px solid var(--lime);
+  }
+  .m-burger {
+    width: 44px; height: 44px; flex: none; display: grid; place-items: center;
+    border-radius: 12px; border: 2px solid #fff;
+    background: var(--ink); color: #fff; cursor: pointer; padding: 0;
+  }
+  .m-burger:hover, .m-burger:active { background: #2a2e2c; }
+  .m-burger:focus-visible { outline: 3px solid var(--lime); outline-offset: 2px; }
+  .m-burger svg.i { width: 24px; height: 24px; }
+  .m-brand {
+    display: flex; align-items: center; gap: 9px; min-width: 0; cursor: pointer;
+    font-family: var(--font-heading); font-weight: 400; font-size: 14px; letter-spacing: -.02em; white-space: nowrap;
+  }
+  .m-brand img { width: 32px; height: 32px; border-radius: 8px; background: #fff; padding: 3px; object-fit: contain; flex: none; border: 2px solid #fff; }
+  .m-brand span { overflow: hidden; text-overflow: ellipsis; }
+
+  .app > aside {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 1001;
+    width: min(300px, 86vw); height: 100vh; height: 100dvh;
+    flex-direction: column; align-items: stretch; gap: 5px;
+    padding: 18px 14px; overflow-x: hidden; overflow-y: auto;
+    border-right: 3px solid #0f1110;
+    transform: translateX(-105%); visibility: hidden;
+    transition: transform .28s cubic-bezier(.2,.8,.2,1), visibility 0s linear .28s;
+  }
+  body.side-open .app > aside {
+    transform: none; visibility: visible;
+    box-shadow: 8px 0 0 rgba(15,17,16,.25);
+    transition: transform .28s cubic-bezier(.2,.8,.2,1), visibility 0s;
+  }
+  .app > aside .logo { display: flex; padding: 0 44px 18px 8px; }
+  .app > aside .grp { display: block; }
+  .app > aside .me { display: block; margin-top: auto; padding: 16px 8px 0; }
+  .app > aside .nav {
+    width: 100%; flex: none; white-space: normal; justify-content: flex-start;
+    gap: 12px; padding: 12px; text-align: left;
+  }
+  .app > aside .nav .cnt { position: static; margin-left: auto; flex: none; }
+  .app > aside .side-close {
+    display: grid; place-items: center; position: absolute; top: 14px; right: 12px;
+    width: 36px; height: 36px; padding: 0; border-radius: 10px; cursor: pointer;
+    border: 2px solid rgba(255,255,255,.4); background: rgba(255,255,255,.08); color: #fff;
+  }
+  .app > aside .side-close:hover { background: rgba(255,255,255,.18); }
+
+  .app > .side-overlay {
+    display: block; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(15,17,16,.55); opacity: 0; pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  body.side-open .app > .side-overlay { opacity: 1; pointer-events: auto; }
+  body.side-open { overflow: hidden; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-tip, .app > aside, .app > .side-overlay { transition: none !important; }
+}

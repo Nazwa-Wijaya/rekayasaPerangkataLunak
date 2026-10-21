@@ -1,0 +1,131 @@
+/* css/motion.css — Gerak + foto modal + fokus pencarian (neo-brutalism). */
+:root { --motion-ease: cubic-bezier(.2,.8,.2,1); }
+
+/* Masuk halaman: sederhana, tidak menyisakan transform permanen. */
+#root > header { animation: motion-nav-in .5s var(--motion-ease) backwards; }
+#main .head h1 { animation: title-arrive .55s var(--motion-ease) backwards; }
+#main .head p, #main .bar, .info-banner { animation: content-arrive .55s .1s var(--motion-ease) backwards; }
+#main { animation-fill-mode: backwards !important; }
+.no-enter .item, .no-enter .head, .no-enter .head *, .no-enter .bar,
+.no-enter .info-banner, #main.no-enter { animation: none !important; }
+
+/* Reveal saat scroll (dipakai 13-motion.js). */
+.motion-reveal {
+  opacity: 0; transform: translateY(15px);
+  transition: opacity .5s var(--motion-ease), transform .5s var(--motion-ease);
+  transition-delay: var(--motion-delay, 0ms);
+}
+.motion-reveal.motion-visible { opacity: 1; transform: translateY(0); }
+
+/* Kartu: hover geser ala stiker. */
+#main .item {
+  transform-origin: center bottom; will-change: transform;
+  transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s cubic-bezier(.2,.8,.2,1) !important;
+}
+#main .item .ph { overflow: hidden; }
+#main .item .ph img { transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+#main .item:hover .ph img { transform: scale(1.045); }
+
+/* Toast + modal. */
+.toast { animation: toast-in .3s var(--motion-ease) backwards !important; }
+.toast.leaving { animation: toast-out .2s ease-in backwards !important; }
+dialog[open] { animation: modal-soft-in .3s var(--motion-ease) backwards !important; }
+dialog::backdrop { background: rgba(15,17,16,.5); }
+
+/* Foto kartu: kotak 4/3, foto menutup penuh. */
+#main .item .ph { width: 100%; aspect-ratio: 4 / 3; min-height: 0; display: grid; place-items: center; position: relative; }
+#main .item .ph > img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+#main .item .ph:not(:has(> img)) { aspect-ratio: auto; height: 132px; }
+#main .item .ph .badge { position: absolute; top: 12px; left: 12px; z-index: 2; }
+
+/* Kolom isian: tinggi seragam. */
+#main input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+#main select { height: 44px; min-height: 44px; box-sizing: border-box; }
+#main select { padding-right: 36px !important; text-overflow: ellipsis; }
+#main textarea { box-sizing: border-box; }
+input[type="file"] { padding: 6px !important; height: auto !important; cursor: pointer; }
+input[type="file"]::file-selector-button {
+  margin-right: 12px; padding: 8px 14px;
+  border: 2px solid var(--ink); border-radius: 10px;
+  background: var(--yellow); color: var(--ink); font-family: var(--font-mono); font-weight: 700; cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover { background: var(--lime); }
+
+/* Foto modal: penuh sampai tepi atas. */
+dialog { width: min(520px, calc(100vw - 28px)); max-height: calc(100vh - 32px); padding: 0; overflow: hidden; }
+dialog .in { padding: 0 24px 22px; max-height: calc(100vh - 34px); overflow-y: auto; overscroll-behavior: contain; }
+dialog .in > .modal-photo {
+  position: relative; display: block; width: calc(100% + 48px);
+  aspect-ratio: 16 / 10; max-height: 300px; margin: 0 -24px 18px;
+  overflow: hidden; background: #fff; border-bottom: 2px solid var(--ink);
+}
+dialog .in > .modal-photo > img {
+  position: absolute; inset: 0; display: block; width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  animation: modal-photo-in .45s var(--motion-ease) backwards;
+}
+dialog .in > .modal-photo > svg { position: absolute; inset: 0; margin: auto; width: 52px; height: 52px; opacity: .5; }
+dialog .modal-head { display: grid; justify-items: start; gap: 6px; margin-bottom: 14px; }
+dialog .modal-head h2 { margin: 0; font-family: var(--font-heading); font-size: 22px; font-weight: 400; line-height: 1.2; letter-spacing: -.02em; overflow-wrap: anywhere; }
+dialog .dl { display: grid; grid-template-columns: minmax(96px, 128px) minmax(0, 1fr); column-gap: 0; margin: 0; }
+dialog .dl dt, dialog .dl dd { margin: 0; padding: 10px 0; border-top: 1px solid rgba(15,17,16,.16); font-size: 14px; overflow-wrap: anywhere; }
+dialog .dl dt { font-family: var(--font-mono); font-size: 12.5px; color: var(--mute); font-weight: 600; padding-right: 16px; }
+dialog .dl dd { font-family: var(--font-body); font-weight: 600; }
+dialog .foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+dialog .foot .btn { min-height: 42px; }
+
+/* Statistik: 6 kartu jadi 3+3, layar kecil 2 kolom. */
+.stats { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.stats:has(> .stat:nth-child(5)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Tabel & dua kolom tidak boleh melebarkan halaman. */
+.tw { overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
+.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.two > div { min-width: 0; }
+.btn { white-space: nowrap; }
+td, th { overflow-wrap: break-word; }
+
+/* Fokus pencarian forum: jadi sorotan tengah + latar gelap. */
+body:has(#main .search-field-wrap #sq:focus)::before {
+  content: ""; position: fixed; inset: 0; z-index: 9998;
+  background: rgba(15,17,16,.45); animation: search-backdrop-in .24s ease backwards;
+}
+body:has(#main .search-field-wrap #sq:focus) #main .search-field-wrap {
+  position: fixed; z-index: 9999; left: 50%; top: 34%;
+  transform: translate(-50%, -50%); width: min(720px, calc(100vw - 36px));
+  padding: 10px; border: 2px solid var(--ink); border-radius: 18px;
+  background: #fff; box-shadow: 8px 8px 0 var(--ink);
+}
+body:has(#main .search-field-wrap #sq:focus) #main .search-field-wrap #sq { min-height: 56px; font-size: 16px; }
+#sq::-webkit-search-cancel-button, #sq::-webkit-search-decoration { display: none; }
+
+@keyframes motion-nav-in { from { opacity: 0; transform: translateY(-9px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes title-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes content-arrive { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toast-in { from { opacity: 0; transform: translate(18px,8px) scale(.97); } to { opacity: 1; transform: translate(0,0) scale(1); } }
+@keyframes toast-out { to { opacity: 0; transform: translate(12px,0) scale(.98); } }
+@keyframes modal-soft-in { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes modal-photo-in { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: scale(1); } }
+@keyframes search-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 1360px) {
+  .two, #main div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .tw table { min-width: 520px; }
+  #main .forum-search-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats, .stats:has(> .stat:nth-child(5)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  dialog .in { padding: 0 18px 18px; }
+  dialog .in > .modal-photo { width: calc(100% + 36px); margin: 0 -18px 16px; }
+  dialog .dl { grid-template-columns: 92px minmax(0, 1fr); }
+  dialog .foot .btn { flex: 1 1 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root > header, #main .head h1, #main .head p, #main .bar, .info-banner,
+  .toast, dialog[open], dialog .in > .modal-photo > img, .motion-reveal,
+  #main .item, #main .item .ph img { animation: none !important; transition: none !important; }
+  .motion-reveal { opacity: 1 !important; transform: none !important; }
+  .btn:hover, #main .item:hover { transform: none !important; }
+}
