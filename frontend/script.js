@@ -377,6 +377,40 @@ const mapMsg = (m) => ({
   rname: m.report_name || m.rname || null,
 });
 
+const safeTime = (x) => {
+  if (!x) return 0;
+  if (typeof x === "number") return x;
+  const iso = String(x).replace(" ", "T");
+  const t = new Date(iso).getTime();
+  return isNaN(t) ? new Date(x).getTime() || 0 : t;
+};
+
+// Urutkan percakapan mahasiswa untuk Admin:
+// Mahasiswa dengan pesan terbaru (masuk/keluar) akan selalu berada di paling atas.
+function getSortedStudentsForAdmin() {
+  const last = (id) => DB.msgs.filter((m) => m.uid === id).slice(-1)[0];
+  const un = (id) =>
+    DB.msgs.filter((m) => m.uid === id && m.from === "user" && !m.read).length;
+
+  return DB.users
+    .filter((u) => u.role === "user")
+    .slice()
+    .sort((a, b) => {
+      const la = last(a.id);
+      const lb = last(b.id);
+      const ta = la && la.at ? safeTime(la.at) : 0;
+      const tb = lb && lb.at ? safeTime(lb.at) : 0;
+      // 1. Urutkan berdasarkan waktu pesan terbaru (terbaru di paling atas)
+      if (tb !== ta) return tb - ta;
+      // 2. Jika waktu sama / belum ada pesan, dahulukan pesan belum dibaca
+      const una = un(a.id);
+      const unb = un(b.id);
+      if (unb !== una) return unb - una;
+      // 3. Fallback abjad nama
+      return (a.name || "").localeCompare(b.name || "", "id-ID");
+    });
+}
+
 async function refreshStore() {
   try {
     const [rep, fnd] = await Promise.all([
@@ -673,12 +707,9 @@ function focusForumSearch() {
 }
 
 function goLogin(m) {
+  closeAllDlg();
   ST.auth = "login";
   if (m) toast(m);
-  // Tutup modal detail kartu yang mungkin masih terbuka.
-  // <dialog> ditempel di document.body (di luar #root), jadi render() tidak menghapusnya.
-  const d = document.querySelector("dialog");
-  if (d && d.open) d.close();
   location.hash = "#/masuk";
   render();
 }
@@ -782,7 +813,7 @@ function auth() {
             }
             <button class="btn block">${reg ? "Kirim Pendaftaran" : "Masuk"}</button>
           </form>
-          <p class="hint">Pendaftaran hanya untuk mahasiswa. Petugas & admin dibuat oleh pengelola sistem. Hubungi Admin Kemahasiswaan jika lupa kata sandi.</p>
+          <p class="hint">Pendaftaran hanya untuk mahasiswa. Petugas & admin dibuat oleh pengelola sistem. Klik "Lupa Password?" untuk reset via email.</p>
         </div>
       </div>
     </div>
@@ -990,6 +1021,7 @@ function markRead() {
 
 // Enhanced Chat: Start chat linked to uploaded item
 function chatAbout(rid) {
+  closeAllDlg();
   const r = DB.reports.find((x) => x.id === rid);
   if (!r) return;
 
@@ -1000,9 +1032,6 @@ function chatAbout(rid) {
     );
     return;
   }
-
-  const e = $("dialog");
-  if (e && e.open) e.close();
 
   if (ST.user.role === "admin") {
     ST.chat = r.uid;
@@ -1020,6 +1049,28 @@ function chatAbout(rid) {
   // Student chatting with Admin about this item
   ST.chatReportId = rid;
   ST.draft = "";
+  nav("pesan");
+}
+
+function chatAboutFound(fid) {
+  closeAllDlg();
+  const f = DB.found.find((x) => x.id === fid);
+  if (!f) return;
+
+  if (!ST.user) {
+    ST.pendingFoundChat = { fid };
+    goLogin(
+      `Silakan masuk terlebih dahulu untuk berkonsultasi mengenai barang temuan "${f.name}".`,
+    );
+    return;
+  }
+
+  if (ST.user.role === "petugas") {
+    toast("Sebagai Petugas, koordinasikan langsung dengan Admin");
+    return;
+  }
+
+  ST.draft = `Halo Admin, saya ingin menanyakan mengenai barang temuan "${f.name}" (Kategori: ${f.cat}) yang ditemukan di ${f.loc}.`;
   nav("pesan");
 }
 
@@ -1067,9 +1118,9 @@ async function app() {
   const unr = unread();
 
   if (ST.view === "pesan") {
-    if (a && !ST.chat) {
-      const firstStudent = DB.users.find((u) => u.role === "user");
-      if (firstStudent) ST.chat = firstStudent.id;
+    if (a && (!ST.chat || !DB.users.some((u) => u.id === ST.chat))) {
+      const sorted = getSortedStudentsForAdmin();
+      if (sorted.length) ST.chat = sorted[0].id;
     }
     markRead();
   }
@@ -1340,8 +1391,15 @@ const V = {
   pesan() {
     const a = ST.user.role === "admin";
     const me = a ? "admin" : "user";
+    const us = a ? getSortedStudentsForAdmin() : [];
+
+    if (a && (!ST.chat || !us.some((u) => u.id === ST.chat)) && us.length > 0) {
+      ST.chat = us[0].id;
+    }
     const uid = a ? ST.chat : ST.user.id;
-    const us = DB.users.filter((u) => u.role === "user");
+    if (a && ST.chat) {
+      markRead();
+    }
 
     // Filter message list for active conversation
     const list = DB.msgs.filter((m) => m.uid === uid);
@@ -1355,7 +1413,7 @@ const V = {
       ? DB.reports.find((r) => r.id === ST.chatReportId)
       : null;
 
-    // Sidebar for Admin
+    // Sidebar for Admin: mahasiswa dengan pesan terbaru selalu di paling atas
     const side = a
       ? `<div class="clist">
           <div class="clist-header">Percakapan Mahasiswa (${us.length})</div>
@@ -1373,7 +1431,7 @@ const V = {
                   <b>${esc(u.name)}</b>
                   <div class="meta">${esc(u.nim)} &bull; ${esc(u.prodi)}</div>
                   ${relatedMsg ? `<div class="item-tag">${esc(relatedMsg.rname)}</div>` : ""}
-                  <div class="meta cu-last">${l ? esc(l.text) : "Belum ada pesan"}</div>
+                  <div class="meta cu-last">${l ? esc(l.text) : "Belum ada pesan"}${l && l.at ? ` &bull; <time>${fmtClock(l.at)}</time>` : ""}</div>
                 </span>
                 ${n ? `<span class="cnt">${n}</span>` : ""}
               </button>
@@ -2410,11 +2468,11 @@ async function detail(id) {
     </dl>
     ${takerHtml}
     <div class="foot">
-      <button class="btn ghost" onclick="$('dialog').close()">Tutup</button>
-      ${canDelete() ? `<button class="btn bad" onclick="deleteReport(${r.id})">Hapus Laporan</button>` : ""}
-      <button class="btn" onclick="chatAbout(${r.id})">
+      <button type="button" class="btn chat-about" onclick="chatAbout(${r.id})">
         ${isAdm ? `Chat ${esc(uname(r.uid) || "Pelapor")} tentang Barang Ini` : `Chat Admin tentang Barang Ini`}
       </button>
+      <button type="button" class="btn ghost" onclick="$('dialog').close()">Tutup</button>
+      ${canDelete() ? `<button class="btn bad" onclick="deleteReport(${r.id})">Hapus Laporan</button>` : ""}
       ${isAdm && r.status === "PENDING" ? `<button class="btn sm" onclick="setR(${r.id},'ACTIVE');$('dialog').close();toast('Laporan disetujui');app()">Setujui</button>` : ""}
       ${isAdm && r.status === "FOUND" ? `<button class="btn sm" onclick="$('dialog').close();verif(${r.id})">Verifikasi Kepemilikan</button>` : ""}
     </div>
@@ -2443,7 +2501,8 @@ function detailFound(id) {
       <dt>Kondisi</dt><dd>${esc(f.desc || "Disimpan di kantor kemahasiswaan")}</dd>
     </dl>
     <div class="foot">
-      <button class="btn ghost" onclick="$('dialog').close()">Tutup</button>
+      ${!ST.user || ST.user.role === "user" ? `<button type="button" class="btn chat-about" onclick="chatAboutFound(${f.id})">Chat Admin Tanya Barang Ini</button>` : ""}
+      <button type="button" class="btn ghost" onclick="$('dialog').close()">Tutup</button>
       ${canDeleteFound(f) ? `<button class="btn bad" onclick="deleteFound(${f.id})">Hapus Temuan</button>` : ""}
       ${ST.user && ST.user.role === "admin" && f.status === "PENDING_APPROVAL" ? `<button class="btn sm" onclick="accFoundItem(${f.id});$('dialog').close()">Setujui (ACC)</button>` : ""}
     </div>

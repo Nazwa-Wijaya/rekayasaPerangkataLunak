@@ -27,10 +27,204 @@ function tpw(id, b) {
   } catch (_) {}
 }
 
-// Satu pintu masuk untuk semua peran (mahasiswa / petugas / admin).
-// Peran dibaca dari data akun saat login, lalu otomatis diarahkan ke tampilannya.
-// Regist mahasiswa: Cara B (upload KTM + ACC manual admin), tanpa OTP.
+// ===== FORGOT PASSWORD — OTP 3-STEP =====
+let _otpEmail = "";        // email yang digunakan untuk request OTP
+let _resetToken = "";      // token dari verify-otp untuk reset password
+let _otpCountdown = null;  // timer untuk countdown kirim ulang
+
+function showForgotPassword() {
+  _otpEmail = "";
+  _resetToken = "";
+  _showForgotStep1();
+}
+
+// Step 1: Input email
+function _showForgotStep1() {
+  dlg(`<button type="button" class="x" aria-label="Tutup" onclick="closeDlg()">×</button>
+    <h2>Lupa Password?</h2>
+    <p class="sub">Masukkan email akun Anda. Kode OTP 6 digit akan dikirim ke email tersebut.</p>
+    <form onsubmit="event.preventDefault();_submitForgotEmail()">
+      <div class="f"><label>Email terdaftar</label><input id="forgot_email" type="email" autocomplete="email" required placeholder="nama@kampus.ac.id" value="${_otpEmail}"></div>
+      <button class="btn block" id="forgot_btn">Kirim Kode OTP</button>
+    </form>`);
+}
+
+async function _submitForgotEmail() {
+  const email = $("#forgot_email").value.trim();
+  if (!email) return toast("Masukkan email Anda.");
+  const btn = $("#forgot_btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Mengirim..."; }
+  try {
+    const r = await API.req("/api/auth/forgot-password", { method: "POST", body: { email } });
+    _otpEmail = email;
+    toast(r.message);
+    _showForgotStep2();
+  } catch (e) {
+    toast(e.message);
+    if (btn) { btn.disabled = false; btn.textContent = "Kirim Kode OTP"; }
+  }
+}
+
+// Step 2: Input OTP 6 digit
+function _showForgotStep2() {
+  dlg(`<button type="button" class="x" aria-label="Tutup" onclick="closeDlg()">×</button>
+    <h2>Masukkan Kode OTP</h2>
+    <p class="sub">Kode 6 digit telah dikirim ke <b>${_otpEmail}</b>. Berlaku 10 menit.</p>
+    <form onsubmit="event.preventDefault();_submitOtp()">
+      <div class="otp-inputs" id="otp_box">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" onfocus="this.select()" oninput="_otpInput(event)" onkeydown="_otpKey(event)" onpaste="_otpPaste(event)">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" onfocus="this.select()" oninput="_otpInput(event)" onkeydown="_otpKey(event)">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" onfocus="this.select()" oninput="_otpInput(event)" onkeydown="_otpKey(event)">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" onfocus="this.select()" oninput="_otpInput(event)" onkeydown="_otpKey(event)">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" onfocus="this.select()" oninput="_otpInput(event)" onkeydown="_otpKey(event)">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" onfocus="this.select()" oninput="_otpInput(event)" onkeydown="_otpKey(event)">
+      </div>
+      <button class="btn block" id="otp_btn">Verifikasi OTP</button>
+    </form>
+    <div class="otp-resend">
+      <span id="otp_timer"></span>
+      <button type="button" id="otp_resend_btn" class="link-btn" onclick="_resendOtp()" disabled>Kirim ulang OTP</button>
+    </div>
+    <p class="hint" style="margin-top:12px"><button type="button" class="link-btn" onclick="_showForgotStep1()">← Ganti email</button></p>`);
+  // Fokus ke input pertama
+  const first = document.querySelector("#otp_box input");
+  if (first) first.focus();
+  // Mulai countdown kirim ulang (60 detik)
+  _startResendCountdown(60);
+}
+
+function _otpInput(e) {
+  const inp = e.target;
+  // Hanya angka
+  inp.value = inp.value.replace(/[^0-9]/g, "");
+  if (inp.value && inp.nextElementSibling) inp.nextElementSibling.focus();
+}
+
+function _otpKey(e) {
+  if (e.key === "Backspace" && !e.target.value && e.target.previousElementSibling) {
+    e.target.previousElementSibling.focus();
+  }
+}
+
+function _otpPaste(e) {
+  e.preventDefault();
+  const paste = (e.clipboardData || window.clipboardData).getData("text").replace(/[^0-9]/g, "").slice(0, 6);
+  const inputs = document.querySelectorAll("#otp_box input");
+  for (let i = 0; i < inputs.length; i++) {
+    inputs[i].value = paste[i] || "";
+  }
+  if (paste.length >= 6 && inputs[5]) inputs[5].focus();
+}
+
+function _getOtpValue() {
+  const inputs = document.querySelectorAll("#otp_box input");
+  let val = "";
+  inputs.forEach(i => val += i.value);
+  return val;
+}
+
+function _startResendCountdown(seconds) {
+  if (_otpCountdown) clearInterval(_otpCountdown);
+  let sec = seconds;
+  const timerEl = document.getElementById("otp_timer");
+  const resendBtn = document.getElementById("otp_resend_btn");
+  if (resendBtn) resendBtn.disabled = true;
+  const tick = () => {
+    if (timerEl) timerEl.textContent = sec > 0 ? `Kirim ulang dalam ${sec}s` : "";
+    if (sec <= 0) {
+      clearInterval(_otpCountdown);
+      _otpCountdown = null;
+      if (resendBtn) resendBtn.disabled = false;
+    }
+    sec--;
+  };
+  tick();
+  _otpCountdown = setInterval(tick, 1000);
+}
+
+async function _resendOtp() {
+  const resendBtn = document.getElementById("otp_resend_btn");
+  if (resendBtn) { resendBtn.disabled = true; resendBtn.textContent = "Mengirim..."; }
+  try {
+    const r = await API.req("/api/auth/forgot-password", { method: "POST", body: { email: _otpEmail } });
+    toast(r.message);
+    _startResendCountdown(60);
+  } catch (e) { toast(e.message); }
+  if (resendBtn) resendBtn.textContent = "Kirim ulang OTP";
+}
+
+async function _submitOtp() {
+  const otp = _getOtpValue();
+  if (otp.length !== 6) return toast("Masukkan kode OTP 6 digit.");
+  const btn = $("#otp_btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Memverifikasi..."; }
+  try {
+    const r = await API.req("/api/auth/verify-otp", { method: "POST", body: { email: _otpEmail, otp } });
+    _resetToken = r.reset_token;
+    toast(r.message);
+    _showForgotStep3();
+  } catch (e) {
+    toast(e.message);
+    if (btn) { btn.disabled = false; btn.textContent = "Verifikasi OTP"; }
+  }
+}
+
+// Step 3: Reset password
+function _showForgotStep3() {
+  if (_otpCountdown) { clearInterval(_otpCountdown); _otpCountdown = null; }
+  dlg(`<button type="button" class="x" aria-label="Tutup" onclick="closeDlg()">×</button>
+    <h2>Buat Password Baru</h2>
+    <p class="sub">Masukkan password baru untuk akun Anda.</p>
+    <form onsubmit="event.preventDefault();_submitNewPassword()">
+      <div class="f"><label>Kata sandi baru (min. 6 karakter)</label>${pw("new_pw")}</div>
+      <div class="f"><label>Konfirmasi kata sandi</label>${pw("new_pw2")}</div>
+      <button class="btn block" id="reset_btn">Simpan Password Baru</button>
+    </form>`);
+}
+
+async function _submitNewPassword() {
+  const password = $("#new_pw").value;
+  const confirm = $("#new_pw2").value;
+  if (password.length < 6) return toast("Kata sandi minimal 6 karakter.");
+  if (password !== confirm) return toast("Konfirmasi kata sandi tidak sama.");
+  const btn = $("#reset_btn");
+  if (btn) { btn.disabled = true; btn.textContent = "Menyimpan..."; }
+  try {
+    const r = await API.req("/api/auth/reset-password", { method: "POST", body: { reset_token: _resetToken, password, confirm } });
+    closeDlg();
+    _otpEmail = "";
+    _resetToken = "";
+    toast(r.message);
+  } catch (e) {
+    toast(e.message);
+    if (btn) { btn.disabled = false; btn.textContent = "Simpan Password Baru"; }
+  }
+}
+
+// ===== LEGACY RESET (token dari URL) — tetap tersedia sebagai fallback =====
+function resetTokenFromUrl() {
+  return new URLSearchParams(location.hash.split("?")[1] || "").get("token") || "";
+}
+
+function authResetPassword() {
+  const token = resetTokenFromUrl();
+  $("#root").innerHTML = `<div class="auth"><div class="hero"><div>${logo}<h1>Buat kata sandi baru.</h1><p>Gunakan kata sandi baru untuk melanjutkan akses akun.</p></div></div><div class="pane"><div class="box"><h2>Reset password</h2><p class="sub">Token berlaku terbatas dan hanya dapat digunakan sekali.</p><form onsubmit="event.preventDefault();submitResetPassword(this)"><div class="f"><label>Kata sandi baru</label>${pw("reset_pw")}</div><div class="f"><label>Konfirmasi kata sandi</label>${pw("reset_pw2")}</div><button class="btn block">Simpan kata sandi</button></form><p class="hint"><a href="#/masuk">Kembali ke Masuk</a></p></div></div></div>`;
+}
+
+async function submitResetPassword() {
+  const password = $("#reset_pw").value;
+  const confirm = $("#reset_pw2").value;
+  try {
+    const r = await API.req("/api/auth/reset-password", { method: "POST", body: { token: resetTokenFromUrl(), password, confirm } });
+    toast(r.message);
+    location.hash = "#/masuk";
+    render();
+  } catch (e) { toast(e.message); }
+}
+
 function auth() {
+  closeAllDlg();
+  if (location.hash.startsWith("#/reset-password")) return authResetPassword();
   const mode =
     ST.auth === "reg"
       ? "reg"
@@ -48,7 +242,7 @@ function auth() {
           <p>Satu tombol Masuk untuk semua peran. Mahasiswa, petugas, dan admin masuk dari sini — sistem otomatis mengarahkan sesuai jenis akun.</p>
         </div>
         <ol class="steps">
-          <li><em>1</em><span><b>Masuk sesuai akun Anda</b>Mahasiswa memakai NIM, petugas & admin memakai username.</span></li>
+          <li><em>1</em><span><b>Masuk sesuai akun Anda</b>Mahasiswa memakai NIM atau email, petugas & admin memakai username.</span></li>
           <li><em>2</em><span><b>Diarahkan otomatis</b>Akun admin ke Dashboard Admin, petugas ke Dashboard Petugas, mahasiswa ke Forum.</span></li>
           <li><em>3</em><span><b>Belum punya akun?</b>Daftar sebagai mahasiswa dengan NIM resmi + foto KTM, lalu diverifikasi Admin.</span></li>
         </ol>
@@ -61,12 +255,14 @@ function auth() {
             <button class="${reg ? "on" : ""}" onclick="ST.auth='reg';render()">Daftar Akun</button>
           </div>
           <h2>${reg ? "Pendaftaran Mahasiswa" : "Masuk"}</h2>
-          <p class="sub">${reg ? "Gunakan data identitas dan NIM resmi Anda. Wajib upload foto KTM — akun aktif setelah diverifikasi Admin." : "Mahasiswa masuk dengan NIM, petugas & admin masuk dengan username. Kata sandi wajib diisi."}</p>
+          <p class="sub">${reg ? "Gunakan data identitas dan NIM resmi Anda. Wajib upload foto KTM — akun aktif setelah diverifikasi Admin." : "Masuk dengan NIM, email, atau username. Kata sandi wajib diisi."}</p>
           <form onsubmit="event.preventDefault();doAuth(this)">
             ${reg ? `<div class="f"><label>Nama lengkap</label><input id="rn" placeholder="Contoh: Rina Marlina" required autocomplete="off"></div>` : ""}
-            <div class="f"><label>${reg ? "NIM" : "NIM / Username"}</label><input id="login_id" inputmode="text" placeholder="${reg ? "Contoh: 2211001" : "Contoh: 2211001 / admin / petugas"}" required autocomplete="off"></div>
+            <div class="f"><label>${reg ? "NIM" : "NIM / Email / Username"}</label><input id="login_id" inputmode="text" placeholder="${reg ? "Contoh: 2211001" : "Contoh: 2211001 / email@kampus.ac.id"}" required autocomplete="off"></div>
+            ${reg ? `<div class="f"><label>Email pemulihan</label><input id="re" type="email" placeholder="nama@kampus.ac.id" required autocomplete="email"></div>` : ""}
             ${reg ? `<div class="f"><label>Program studi</label><select id="rp" required><option value="">— Pilih program studi —</option>${prodiOpts()}</select></div>` : ""}
             <div class="f"><label>Kata sandi${reg ? " (min. 6 karakter)" : ""}</label>${pw("pw")}</div>
+            ${!reg ? `<p class="auth-forgot"><button type="button" onclick="showForgotPassword()">Lupa Password?</button></p>` : ""}
             ${
               reg
                 ? `<div class="f"><label>Konfirmasi kata sandi</label>${pw("pw2")}</div>
@@ -75,7 +271,7 @@ function auth() {
             }
             <button class="btn block">${reg ? "Kirim Pendaftaran" : "Masuk"}</button>
           </form>
-          <p class="hint">Pendaftaran hanya untuk mahasiswa. Petugas & admin dibuat oleh pengelola sistem. Hubungi Admin Kemahasiswaan jika lupa kata sandi.</p>
+          <p class="hint">Pendaftaran hanya untuk mahasiswa. Petugas & admin dibuat oleh pengelola sistem. Klik "Lupa Password?" untuk reset via email.</p>
         </div>
       </div>
     </div>
@@ -153,10 +349,13 @@ async function doAuth(form) {
   if (ST.auth === "reg") {
     const n = $("#rn").value.trim();
     const pr = $("#rp").value;
+    const email = $("#re").value.trim().toLowerCase();
     const p2 = $("#pw2").value;
     const ktm = $("#ktm").files[0];
-    if (!n || !id || !pr || !p || !p2)
+    if (!n || !id || !email || !pr || !p || !p2)
       return toast("Lengkapi semua data pendaftaran.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return toast("Email tidak valid.");
     if (!/^[0-9]{5,15}$/.test(id))
       return toast("NIM harus berupa angka (5-15 digit).");
     if (!PRODI_LIST.includes(pr))
@@ -172,6 +371,7 @@ async function doAuth(form) {
       const fd = new FormData();
       fd.append("name", n);
       fd.append("nim", id);
+      fd.append("email", email);
       fd.append("prodi", pr);
       fd.append("password", p);
       fd.append("confirm", p2);
@@ -186,7 +386,7 @@ async function doAuth(form) {
       return toast(e.message);
     }
   }
-  if (!id || !p) return toast("Isi NIM/username dan kata sandi.");
+  if (!id || !p) return toast("Isi NIM/email/username dan kata sandi.");
   // Login satu pintu via backend (bcrypt + JWT + cek ACTIVE).
   try {
     const r = await API.req("/api/auth/login", {
@@ -231,6 +431,14 @@ function afterLoginCheck() {
 }
 
 function logout() {
+  if (window._chatPollTimer) {
+    clearInterval(window._chatPollTimer);
+    window._chatPollTimer = null;
+  }
+  if (window._globalMsgTimer) {
+    clearInterval(window._globalMsgTimer);
+    window._globalMsgTimer = null;
+  }
   ST.user = null;
   ST.token = null;
   sessionStorage.removeItem("LF_TOKEN");

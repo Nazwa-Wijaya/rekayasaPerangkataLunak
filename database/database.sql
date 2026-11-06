@@ -1,4 +1,4 @@
--- ==========================================================
+VIEWSmysql`component`-- ==========================================================
 -- DATABASE: lost_and_found_kampus
 -- Sistem Informasi Lost & Found Terintegrasi Kampus
 -- Kompatibel dengan MySQL / MariaDB (Laragon / phpMyAdmin / HeidiSQL)
@@ -17,6 +17,7 @@ USE `lost_and_found_kampus`;
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS `audit_logs`;
+DROP TABLE IF EXISTS `password_reset_tokens`;
 DROP TABLE IF EXISTS `messages`;
 DROP TABLE IF EXISTS `returns`;
 DROP TABLE IF EXISTS `matches`;
@@ -36,6 +37,7 @@ CREATE TABLE `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `name` VARCHAR(100) NOT NULL COMMENT 'Nama lengkap pengguna',
   `nim` VARCHAR(30) NULL UNIQUE COMMENT 'Nomor Induk Mahasiswa (khusus role user, angka 5-15 digit)',
+  `email` VARCHAR(254) NULL UNIQUE COMMENT 'Email pemulihan password',
   `prodi` VARCHAR(100) NULL COMMENT 'Program studi (role user, dari daftar PRD §3) / divisi petugas',
   `username` VARCHAR(50) NULL UNIQUE COMMENT 'Username untuk login staf (petugas/admin)',
   `password_hash` VARCHAR(255) NOT NULL COMMENT 'Hash bcrypt password. JANGAN simpan plaintext.',
@@ -51,6 +53,19 @@ CREATE TABLE `users` (
   INDEX `idx_role` (`role`),
   INDEX `idx_nim` (`nim`),
   INDEX `idx_verification` (`verification_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Token reset disimpan sebagai SHA-256 hash; token asli hanya dikirim via email.
+CREATE TABLE `password_reset_tokens` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `token_hash` CHAR(64) NOT NULL UNIQUE,
+  `expires_at` DATETIME NOT NULL,
+  `used_at` DATETIME NULL,
+  `attempts` INT NOT NULL DEFAULT 0 COMMENT 'Jumlah percobaan verifikasi OTP yang salah (maks 5)',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT `fk_reset_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  INDEX `idx_reset_expiry` (`expires_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ==========================================================
