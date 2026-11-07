@@ -24,3 +24,6 @@ desktop.ini
 # Build output
 dist/
 build/
+
+# Uploads KTM lawas (kini base64 di DB; sisa file migrasi lokal)
+backend/uploads/

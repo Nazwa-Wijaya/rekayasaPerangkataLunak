@@ -7,14 +7,54 @@
   <title>Lost & Found Kampus | Layanan Terintegrasi Barang Hilang & Temuan</title>
   <meta name="description"
     content="Sistem resmi laporan barang hilang dan pengelolaan barang temuan terintegrasi kampus.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+    href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="css/polish.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/dashboard/base.css">
+  <link rel="stylesheet" href="css/dashboard/widgets.css">
+  <link rel="stylesheet" href="css/dashboard/forum.css">
+  <link rel="stylesheet" href="css/dashboard/sticker.css">
 </head>
 
 <body>
   <div id="root"></div>
-  <script src="script.js"></script>
+  <!-- Opsi A: script klasik berurutan. Dashboard dulu (definisi), inti 00-12, motion/boot terakhir. -->
+  <script src="js/dashboard/state.js"></script>
+  <script src="js/dashboard/icons.js"></script>
+  <script src="js/dashboard/data-utils.js"></script>
+  <script src="js/dashboard/charts.js"></script>
+  <script src="js/dashboard/queue-returns.js"></script>
+  <script src="js/dashboard/view-admin.js"></script>
+  <script src="js/dashboard/view-petugas.js"></script>
+  <script src="js/dashboard/view-forum.js"></script>
+  <script src="js/00-config.js"></script>
+  <script src="js/01-utils.js"></script>
+  <script src="js/02-icons-nav.js"></script>
+  <script src="js/03-store.js"></script>
+  <script src="js/04-api.js"></script>
+  <script src="js/05-ui.js"></script>
+  <script src="js/06-router.js"></script>
+  <script src="js/07-auth.js"></script>
+  <script src="js/08-reports.js"></script>
+  <script src="js/09-found-match.js"></script>
+  <script src="js/10-chat.js"></script>
+  <script src="js/11-admin.js"></script>
+  <script src="js/12-forum-bridge.js"></script>
+  <!-- GSAP + ScrollTrigger (free tier, CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script src="js/13-motion.js"></script>
+  <script src="js/14-gsap-motion.js"></script>
 </body>
 
 </html>

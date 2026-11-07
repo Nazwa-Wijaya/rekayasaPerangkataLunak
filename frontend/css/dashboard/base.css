@@ -1,0 +1,154 @@
+/* css/dashboard/base.css — Scope .fv, header, tombol, kartu, grid (neo-brutalism). */
+
+#main:has(> .fv) {
+  max-width: 1520px !important;
+  padding: 20px clamp(10px, 2vw, 28px) 48px !important;
+}
+.home-main:has(.fv) { max-width: 1240px; }
+
+.fv {
+  --fv-bg: #f1f1ef;
+  --fv-card: #fff;
+  --fv-ink: #0f1110;
+  --fv-mute: #585d59;
+  --fv-line: #0f1110;
+  --fv-lime: #9be82f;
+  --fv-lime-2: #b8f060;
+  --fv-lime-soft: #eaf9cf;
+  --fv-amber: #f5b52e;
+  --fv-blue: #5b7cf0;
+  --fv-red: #ef6b5b;
+  --fv-track: #ececea;
+  --fv-r: 22px;
+  color-scheme: light;
+  color: var(--fv-ink);
+  background-color: var(--fv-bg);
+  background-image: radial-gradient(rgba(15,17,16,.09) 1.2px, transparent 1.5px);
+  background-size: 18px 18px;
+  border: 2px solid var(--fv-ink);
+  border-radius: 26px;
+  box-shadow: 5px 5px 0 var(--fv-ink);
+  padding: clamp(14px, 2vw, 28px);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.home-main .fv { background: transparent; padding: 0; border: 0; box-shadow: none; background-image: none; }
+.fv *, .fv *::before, .fv *::after { box-sizing: border-box; }
+.fv h1, .fv h2, .fv h3 { margin: 0; font-family: var(--font-heading); font-weight: 400; letter-spacing: -.02em; }
+.fv p { margin: 0; font-family: var(--font-body); }
+.fv small { color: var(--fv-mute); font-size: 12px; }
+.fv b { font-weight: 800; }
+.fv .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.fv button { cursor: pointer; font-family: var(--font-mono); }
+.fv-i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---------- Header ---------- */
+.fv-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin: 4px 0 22px; }
+.fv-head h1 { font-family: var(--font-heading); font-size: clamp(24px, 2.6vw, 34px); font-weight: 400; line-height: 1.15; letter-spacing: -.02em; color: var(--fv-ink) !important; }
+.fv-head p { margin-top: 6px; color: var(--fv-mute) !important; max-width: 62ch; font-weight: 500; }
+.fv-head-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+/* ---------- Tombol ---------- */
+.fv-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--fv-lime); color: var(--fv-ink);
+  border: 2px solid var(--fv-ink); border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--fv-ink);
+  padding: 11px 20px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; white-space: nowrap;
+  transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s cubic-bezier(.2,.8,.2,1);
+}
+.fv-btn .fv-i { color: var(--fv-ink); }
+.fv-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--fv-ink); }
+.fv-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--fv-ink); }
+.fv-btn.ghost { background: #fff; color: var(--fv-ink); border-color: var(--fv-ink); }
+.fv-btn.lime { background: var(--fv-lime); border-color: var(--fv-ink); color: var(--fv-ink); }
+.fv-btn.sm { padding: 7px 14px; font-size: 12px; border-radius: 999px; }
+.fv-link { background: none; border: 0; padding: 0; display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-weight: 700; font-size: 13px; color: var(--fv-ink); }
+.fv-link .fv-i { width: 15px; height: 15px; }
+.fv-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.fv :focus-visible { outline: 3px solid var(--fv-ink); outline-offset: 2px; }
+
+.fv-filter {
+  position: relative; display: inline-flex; align-items: center; gap: 8px;
+  background: var(--fv-ink); color: #fff;
+  border: 2px solid var(--fv-ink); border-radius: 999px;
+  box-shadow: 3px 3px 0 rgba(15,17,16,.25);
+  padding: 0 6px 0 18px;
+  font-family: var(--font-mono);
+}
+.fv-filter .fv-i { color: var(--fv-lime); }
+.fv-filter {
+  position: relative;
+  min-width: 256px;
+  padding: 0;
+  overflow: visible;
+}
+.fv-filter-trigger {
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font: 700 13px/1.2 var(--font-mono);
+  text-align: left;
+}
+.fv-filter-trigger span { flex: 1; }
+.fv-filter-trigger .fv-i:last-child { color: var(--fv-lime); width: 15px; height: 15px; transition: transform .2s ease; }
+.fv-filter.is-open .fv-filter-trigger .fv-i:last-child { transform: rotate(180deg); }
+.fv-filter-trigger:focus-visible { outline: 2px solid var(--fv-lime); outline-offset: 3px; }
+.fv-filter-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 100%;
+  padding: 6px;
+  display: none;
+  border: 2px solid var(--fv-ink);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 4px 4px 0 var(--fv-ink);
+}
+.fv-filter.is-open .fv-filter-menu { display: grid; }
+.fv-filter-option {
+  width: 100%;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--fv-ink);
+  font: 600 12px/1.25 var(--font-mono);
+  text-align: left;
+}
+.fv-filter-option:hover,
+.fv-filter-option:focus-visible { background: #eaf9cf; outline: 0; }
+.fv-filter-option.is-selected { background: var(--fv-blue); color: #fff; }
+
+@media (max-width: 600px) {
+  .fv-filter { width: 100%; min-width: 0; }
+  .fv-filter-menu { left: 0; right: auto; width: 100%; }
+}
+
+/* ---------- Kartu ---------- */
+.fv-card {
+  background: var(--fv-card);
+  border: 2px solid var(--fv-ink);
+  border-radius: var(--fv-r);
+  box-shadow: 5px 5px 0 var(--fv-ink);
+  padding: 22px; min-width: 0;
+}
+.fv-card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.fv-card-head h2 { font-family: var(--font-heading); font-size: 19px; font-weight: 400; letter-spacing: -.02em; color: var(--fv-ink) !important; }
+.fv-card-sub { color: var(--fv-mute) !important; font-size: 12.5px; margin: 6px 0 14px !important; font-weight: 500; }
+.fv-card-foot { margin-top: 14px; padding-top: 14px; border-top: 2px solid var(--fv-ink); }
+
+.fv-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
+.fv-main, .fv-side { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.fv-main { container-type: inline-size; }
+@container (max-width: 640px) { .fv-main > .fv-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

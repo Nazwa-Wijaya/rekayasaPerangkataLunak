@@ -1,0 +1,153 @@
+/* css/layout.css — Layout app: sidebar, nav, head, card (neo-brutalism). */
+.app {
+  display: grid;
+  grid-template-columns: 248px 1fr;
+  min-height: 100vh;
+  background: transparent;
+}
+
+aside {
+  background: var(--side);
+  color: var(--side-ink);
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 3px solid var(--ink);
+}
+
+aside .logo {
+  color: #fff;
+  padding: 0 8px 20px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+
+.grp {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #9be82f;
+  padding: 16px 10px 6px;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  border: 2px solid transparent;
+  background: none;
+  padding: 9px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  color: var(--side-ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform .2s cubic-bezier(.2,.8,.2,1), background .2s ease;
+}
+
+.nav:hover {
+  background: rgba(155, 232, 47, .14);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.nav.on {
+  background: #9be82f;
+  border-color: #9be82f;
+  color: #0f1110;
+  font-weight: 700;
+  box-shadow: 3px 3px 0 rgba(255, 255, 255, .9);
+}
+
+.cnt {
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 400;
+  background: #9be82f;
+  color: #0f1110;
+  border: 2px solid #0f1110;
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.me {
+  margin-top: auto;
+  border-top: 2px solid rgba(255, 255, 255, .16);
+  padding: 14px 10px 0;
+  font-size: 13px;
+}
+
+.me b {
+  display: block;
+  color: #fff;
+  font-weight: 800;
+}
+
+.me button {
+  margin-top: 6px;
+  background: none;
+  border: 0;
+  color: #9be82f;
+  font-family: var(--font-mono);
+  padding: 0;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+main {
+  padding: 32px 40px 48px;
+  max-width: 1120px;
+  width: 100%;
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.head h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--ink);
+}
+
+.head p {
+  margin: 6px 0 0;
+  color: var(--mute);
+  font-weight: 500;
+}
+
+.card {
+  background: var(--panel);
+  border: 2px solid var(--ink);
+  border-radius: 22px;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.pad {
+  padding: 22px;
+}
+
+h3.t {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}

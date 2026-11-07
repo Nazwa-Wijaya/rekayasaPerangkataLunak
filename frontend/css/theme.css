@@ -1,0 +1,163 @@
+/* css/theme.css — Tema neo-brutalism ala kartu barang. */
+:root {
+  color-scheme: light;
+  --font-body: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-heading: "Archivo Black", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --bg: #f1f1ef;
+  --panel: #ffffff;
+  --ink: #0f1110;
+  --mute: #585d59;
+  --line: #0f1110;
+  --pri: #0f1110;
+  --pri2: #2a2e2c;
+  --pri-ink: #ffffff;
+  --soft: #eaf9cf;
+  --ph: #ffffff;
+  --side: #0f1110;
+  --side-ink: #e8e9e5;
+  --lime: #9be82f;
+  --lime-soft: #eaf9cf;
+  --yellow: #ffe58a;
+  --mint: #bff0d4;
+  --lav: #e1d9ff;
+  --pink: #ffd5cd;
+  --blue: #dfe8ff;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; font-family: var(--font-body); }
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(rgba(15,17,16,.09) 1.2px, transparent 1.5px);
+  background-size: 18px 18px;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+}
+body::before { content: none !important; }
+
+/* Font Roles: Space Grotesk -> Form inputs */
+input, select, textarea,
+.bar input, .bar select,
+#main input, #main select, #main textarea {
+  font-family: var(--font-body) !important;
+}
+
+/* Font Roles: JetBrains Mono -> Button */
+button, .btn, .search-reset, .detail-action,
+.public-nav-link, .nav, .search-clear, .fv-btn,
+input[type="file"]::file-selector-button {
+  font-family: var(--font-mono) !important;
+}
+button { transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s cubic-bezier(.2,.8,.2,1); }
+button:active { transform: translate(2px, 2px); }
+a { color: var(--ink); }
+
+/* Font Roles: Archivo Black -> Heading, Logo, Angka stat */
+h1, h2, h3, h4, h5, h6,
+.head h1, #main .head h1, #main h1, #main h2, #main h3 {
+  font-family: var(--font-heading) !important;
+  font-weight: 400 !important;
+  letter-spacing: -.02em !important;
+}
+
+.logo, #root > header .logo, aside .logo, .public-header .logo {
+  font-family: var(--font-heading) !important;
+  font-weight: 400 !important;
+  font-size: 15px;
+  letter-spacing: -.02em;
+  gap: 10px;
+}
+.logo img {
+  width: 38px; height: 38px; border-radius: 12px; background: #fff; padding: 3px;
+  border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); object-fit: contain;
+}
+
+/* Font Roles: JetBrains Mono -> Badge, Label meta, Tag, Status code */
+.badge, label, .meta, th, code, pre, .status-code, .tag, .cnt, .grp {
+  font-family: var(--font-mono) !important;
+}
+
+/* Angka Stat: Archivo Black */
+.stat b, .home-stat b, .fv-kpi-val, .fv-bignum b, .fv-donut-center b, .fv-tile b {
+  font-family: var(--font-heading) !important;
+  font-weight: 400 !important;
+}
+
+/* ---------- Header ---------- */
+#root > header {
+  background: #fff !important;
+  color: var(--ink) !important;
+  border-bottom: 2px solid var(--ink) !important;
+  box-shadow: none !important;
+  min-height: 72px;
+  padding: 12px clamp(18px, 4vw, 48px) !important;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+}
+#root > header::after { display: none !important; }
+#root > header .logo { color: var(--ink) !important; font-size: 16px; }
+#root > header + div { background: transparent !important; border: 0 !important; }
+
+/* ---------- Kerangka main ---------- */
+.app { background: transparent; }
+main, #main { min-width: 0; }
+main, #main { max-width: 1120px; padding: 32px clamp(18px, 3vw, 40px) 56px; }
+#main .head { margin-bottom: 22px; }
+#main h1, #main h2, #main h3, .head h1,
+.fv h1, .fv h2, .fv h3, .fv-head h1, .fv-card-head h2, .fv-sec-head h2, .fv-item-body h3 {
+  font-family: var(--font-heading) !important;
+  color: var(--ink) !important;
+  font-weight: 400 !important;
+  letter-spacing: -.02em !important;
+}
+#main .head h1 { font-size: clamp(26px, 3vw, 36px); line-height: 1.15; }
+#main .head p, #main p { color: var(--mute); font-weight: 500; }
+
+/* ---------- Pencarian / filter ---------- */
+.bar { gap: 10px; margin-bottom: 20px; }
+#main .forum-search-bar {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  gap: 10px; align-items: center;
+  background: #fff; border: 2px solid var(--ink); border-radius: 22px;
+  box-shadow: 5px 5px 0 var(--ink); padding: 12px;
+}
+#main .forum-search-bar .search-field-wrap { grid-column: 1 / -1; }
+#main .search-field-wrap { position: relative; display: flex; align-items: center; flex: 2 1 300px; min-width: 0; }
+#main .search-field-wrap #sq { width: 100%; padding-left: 42px !important; padding-right: 42px !important; }
+#main .search-field-icon { position: absolute; left: 14px; color: var(--ink); font-size: 20px; pointer-events: none; }
+#main .search-clear {
+  position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border: 2px solid var(--ink); border-radius: 50%;
+  background: var(--yellow); color: var(--ink); font-size: 16px; line-height: 1; cursor: pointer;
+}
+#sq::-webkit-search-cancel-button, #sq::-webkit-search-decoration { display: none; }
+.search-clear[hidden] { display: none !important; }
+
+/* Tombol reset & detail: stiker kecil */
+.search-reset, #main .search-reset {
+  background: #ffd5cd !important; color: var(--ink) !important; border: 2px solid var(--ink) !important;
+  box-shadow: 4px 4px 0 var(--ink) !important; border-radius: 14px !important;
+  font-weight: 800 !important; white-space: nowrap; min-height: 44px; padding: 0 18px;
+}
+.detail-action, button[onclick^="detail("], button[onclick^="detailFound("] {
+  background: var(--lime) !important; color: var(--ink) !important; border: 2px solid var(--ink) !important;
+  box-shadow: 4px 4px 0 var(--ink) !important; border-radius: 14px !important; font-weight: 800 !important;
+}
+.search-reset:hover, .detail-action:hover,
+button[onclick^="detail("]:hover, button[onclick^="detailFound("]:hover {
+  transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink) !important;
+}
+
+@media (max-width: 760px) {
+  #main .forum-search-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #main .forum-search-bar .search-field-wrap, #main .search-reset { grid-column: 1 / -1; }
+  main, #main { padding: 24px 15px 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
