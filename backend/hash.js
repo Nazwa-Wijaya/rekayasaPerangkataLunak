@@ -1,0 +1,1 @@
+console.log(require('bcryptjs').hashSync('superadmin123', 10));
